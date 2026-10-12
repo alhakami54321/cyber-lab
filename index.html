@@ -436,7 +436,8 @@ function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;","
 
 window.addEventListener("hashchange",render);
 let booted=false;
-let OPEN=null;        // خريطة التمارين المفتوحة (null = لم تُقرأ بعد)
+let OPEN=null;        // خريطة التمارين التي تستقبل الإجابات (null = لم تُقرأ بعد)
+let ACTIVE=null;      // التمرين المعروض للمتدربين الآن
 let SESSION_EXISTS=false;
 function boot(){
   if(booted)return; booted=true;
@@ -446,9 +447,12 @@ function boot(){
       fb.user=u; fb.uid=u?u.uid:null;
       const v=route().view;
       if(v==="trainer"){ render(); return; }
-      if(!u){ if(profile()){ try{await fb.auth.signInAnonymously();}catch(e){console.warn(e.message);} } return; }
+      if(!u){
+        if(profile() || v==="projector"){ try{await fb.auth.signInAnonymously();}catch(e){console.warn(e.message);} }
+        return;
+      }
       if(!fb._watch){ watchSession(); }
-      if(profile()) ensurePlayer(profile());
+      if(profile() && v!=="projector") ensurePlayer(profile());
     });
   }
   render();
@@ -456,9 +460,11 @@ function boot(){
 function watchSession(){
   fb._watch = sref().onSnapshot(d=>{
     SESSION_EXISTS=d.exists;
-    OPEN=(d.exists && d.data().open) || {};
+    const data=d.exists ? d.data() : {};
+    OPEN=data.open || {};
+    ACTIVE=(data.active && EX[data.active]) ? data.active : null;
     const r=route();
-    if(r.view==="home") render();
+    if(r.view==="home" || r.view==="projector") render();
     else if(r.view==="solve" && S.blocked) render();
   }, e=>console.warn("session:",e.message));
 }
@@ -534,6 +540,34 @@ function renderHome(focusDay){
       <button class="btn ghost sm" onclick="editProfile()">تغيير البيانات</button>
     </div>
   </div>`;
+  /* الوضع المباشر: يرى المتدرّب التمرين المفعَّل من المدرّب فقط */
+  if(fb.mode==="live"){
+    if(OPEN===null){
+      html+=`<div class="card center"><div style="font-size:40px">⏳</div><div class="banner warn" style="margin-top:10px">جارٍ الاتصال بالجلسة…</div></div>`;
+    }else if(!ACTIVE){
+      html+=`<div class="card center" id="waitActive">
+        <div style="font-size:46px">🛡️</div>
+        <h2 style="color:var(--brand-d);font-size:19px;margin-top:6px">بانتظار المدرّب</h2>
+        <p class="lead" style="margin-top:6px">لا يوجد تمرين مفعّل الآن. سيظهر التمرين هنا تلقائياً لحظة تفعيله — أبقِ الصفحة مفتوحة.</p>
+        <span class="pill live" style="margin-top:6px">متصل وجاهز</span>
+      </div>`;
+    }else{
+      const id=ACTIVE, e=EX[id], d=DAYS.find(x=>x.id===e.day), done=res[id];
+      html+=`<div class="card" id="activeCard">
+        <span class="pill day">${d.t} · التمرين المفعَّل الآن</span>
+        <div style="display:flex;align-items:center;gap:14px;margin-top:14px">
+          <div style="width:64px;height:64px;border-radius:16px;background:var(--card2);display:grid;place-items:center;font-size:34px;border:1px solid var(--line);flex:none">${e.ic}</div>
+          <div style="min-width:0"><h2 style="color:var(--brand-d);font-size:20px">${e.t}</h2>
+          <p class="lead" style="margin-top:4px">${e.s}</p></div>
+        </div>
+        ${done?`<div class="banner ok" style="margin-top:14px">سلّمت هذا التمرين — درجتك ${done.score} من ${done.max} (${done.pct}%)</div>
+          <button class="btn ghost" style="margin-top:6px" onclick="location.hash='ex=${id}'">محاولة تدريبية (لا تغيّر الدرجة)</button>`
+        :`<button class="btn" style="margin-top:16px" onclick="location.hash='ex=${id}'">ابدأ التمرين</button>`}
+      </div>`;
+    }
+    App.innerHTML=html; return;
+  }
+  /* الوضع المحلي (بلا اتصال): قائمة كاملة للتجربة فقط */
   DAYS.forEach(d=>{
     const ids=EX_IDS.filter(x=>EX[x].day===d.id);
     html+=`<div class="card">
@@ -566,7 +600,7 @@ function waitCard(id,msg,sub){
     <h2 style="color:var(--brand-d);margin-top:6px;font-size:19px">${e?esc(e.t):""}</h2>
     <div class="banner warn" style="margin-top:14px">${msg}</div>
     <p class="note">${sub||""}</p>
-    <div class="btnrow"><button class="btn ghost" onclick="location.hash='${e?e.day:""}'">↩ قائمة التمارين</button></div>
+    <div class="btnrow"><button class="btn ghost" onclick="location.hash=''">↩ الصفحة الرئيسية</button></div>
   </div>`;
 }
 function renderSolve(id){
@@ -584,7 +618,7 @@ function renderSolve(id){
 }
 function solveHeader(e){
   return `<div class="card">
-    <button class="btn ghost sm" onclick="location.hash='${e.day}'" style="margin-bottom:12px">↩ رجوع</button>
+    <button class="btn ghost sm" onclick="location.hash=''" style="margin-bottom:12px">↩ رجوع</button>
     <div style="display:flex;align-items:center;gap:12px">
       <div class="ic" style="width:48px;height:48px;border-radius:13px;background:var(--card2);display:grid;place-items:center;font-size:26px;border:1px solid var(--line)">${e.ic}</div>
       <div><span class="pill day">${DAYS.find(d=>d.id===e.day).t}</span>
@@ -740,8 +774,7 @@ function finishExercise(score){
   box.innerHTML=`<div class="center">${ring}
     <h2 style="color:var(--brand-d);margin-top:6px">${grade.e} ${grade.t}</h2>
     <p class="note" id="saveStatus">جارٍ إرسال النتيجة…</p></div>
-    <div class="btnrow"><button class="btn ghost" onclick="location.hash='${e.day}'">تمارين ${DAYS.find(d=>d.id===e.day).t}</button>
-    <button class="btn sand" onclick="location.hash=''">كل الأيام</button></div>`;
+    <div class="btnrow"><button class="btn sand" onclick="location.hash=''">العودة للصفحة الرئيسية</button></div>`;
   const r=document.getElementById("result"); if(r){r.appendChild(box);box.scrollIntoView({behavior:"smooth",block:"center"});}
   else App.appendChild(box);
   const sb=document.getElementById("submitBtn"); if(sb)sb.remove();
@@ -790,12 +823,12 @@ function renderTrainer(){
 }
 function startTrainerFeeds(){
   if(T.started)return; T.started=true;
-  T.unsub.push(sref().onSnapshot(d=>{T.open=(d.data()&&d.data().open)||{};drawTrainer();}));
+  T.unsub.push(sref().onSnapshot(d=>{const x=d.exists?d.data():{};T.open=x.open||{};T.active=(x.active&&EX[x.active])?x.active:null;drawTrainer();}));
   T.unsub.push(sref().collection("players").onSnapshot(s=>{T.players={};s.forEach(x=>T.players[x.id]=x.data());drawTrainer();}));
   T.unsub.push(sref().collection("results").onSnapshot(s=>{T.results={};s.forEach(x=>T.results[x.id]=x.data());drawTrainer();}));
-  // أنشئ وثيقة الجلسة إن لم توجد (كل التمارين مفتوحة افتراضياً)
-  sref().get().then(d=>{if(!d.exists){const open={};EX_IDS.forEach(id=>open[id]=true);
-    sref().set({title:"حقيبة التصدّي — عسير",createdAt:Date.now(),open});}});
+  // أنشئ وثيقة الجلسة إن لم توجد: كل التمارين مغلقة ولا تمرين مفعّل حتى يفعّله المدرّب
+  sref().get().then(d=>{if(!d.exists){const open={};EX_IDS.forEach(id=>open[id]=false);
+    sref().set({title:"حقيبة التصدّي — عسير",createdAt:Date.now(),open,active:null});}});
 }
 function drawTrainer(){
   if(route().view!=="trainer"||!fb.user||fb.user.email!==CONFIG.trainerEmail)return;
@@ -822,9 +855,11 @@ function drawTrainer(){
     <div class="kpis" style="margin-top:12px">
       <div class="kpi"><b>${players.length}</b><span>متدرّب</span></div>
       <div class="kpi"><b>${submissions}</b><span>تسليم</span></div>
-      <div class="kpi"><b>${Object.values(T.open).filter(Boolean).length}</b><span>تمرين مفتوح</span></div>
+      <div class="kpi"><b>${Object.values(T.open).filter(v=>v===true).length}</b><span>يستقبل الإجابات</span></div>
       <div class="kpi"><b>${players.length?Math.round(lb.reduce((s,x)=>s+x.total,0)/players.length):0}</b><span>متوسط النقاط</span></div>
-    </div></div>`;
+    </div>
+    <div class="banner ${T.active?'ok':'warn'}" style="margin-top:12px;margin-bottom:0">${T.active?`المعروض للمتدربين الآن: ${EX[T.active].ic} <b>${EX[T.active].t}</b> — ${Object.values(T.results).filter(r=>r.ex===T.active&&r.done).length} سلّموا من ${players.length}`:`لا يوجد تمرين معروض للمتدربين — فعّل تمريناً من تبويب «التحكّم».`}</div>
+    </div>`;
 
   // لوحة الصدارة
   html+=`<div class="card"><h3 style="color:var(--brand-d);font-size:16px;margin-bottom:8px">🏆 لوحة الصدارة</h3>`;
@@ -850,16 +885,21 @@ function drawTrainer(){
   // لوحة التحكّم
   html+=`<div id="tctrl" class="hidden"><div class="card">
     <h3 style="color:var(--brand-d);font-size:16px;margin-bottom:4px">التحكّم بالتمارين</h3>
-    <p class="note">افتح أو أغلق كل تمرين للمتدربين. المغلق لا يقبل تسليماً.</p>
-    <div class="btnrow"><button class="btn sand sm" onclick="setAll(true)">فتح الكل</button>
-    <button class="btn ghost sm" onclick="setAll(false)">إغلاق الكل</button></div>
+    <p class="note"><b>«تفعيل الآن»</b> يعرض التمرين وحده على جوالات المتدربين ويفتح استقبال إجاباته. المفتاح بجانبه يتحكّم في استقبال الإجابات فقط — اتركه مفتوحاً للتمرين السابق حتى ينهي المتأخرون.</p>
+    <div class="btnrow">
+      <button class="btn ghost sm" onclick="clearActive()" ${T.active?"":"disabled"}>إيقاف العرض</button>
+      <button class="btn ghost sm" onclick="setAll(false)">إيقاف استقبال الكل</button>
+    </div>
     <div style="margin-top:14px">`;
   DAYS.forEach(d=>{
-    html+=`<div class="note" style="font-weight:800;color:var(--brand-d);margin:10px 0 6px">${d.t}</div>`;
+    html+=`<div class="note" style="font-weight:800;color:var(--brand-d);margin:12px 0 6px">${d.ic} ${d.t}</div>`;
     EX_IDS.filter(x=>EX[x].day===d.id).forEach(id=>{
-      const on=T.open[id]!==false;
-      html+=`<div class="exctl"><div class="nm">${EX[id].ic} ${EX[id].t}</div>
-        <button class="sw ${on?'on':''}" onclick="toggleEx('${id}')"></button></div>`;
+      const on=T.open[id]===true, act=T.active===id;
+      const n=Object.values(T.results).filter(r=>r.ex===id&&r.done).length;
+      html+=`<div class="exctl" style="${act?'border-color:var(--ok);background:var(--ok-bg)':''}">
+        <div class="nm">${EX[id].ic} ${EX[id].t}<div class="st" style="font-weight:600;margin-top:2px">${n} تسليم · ${on?'يستقبل الإجابات':'لا يستقبل'}</div></div>
+        ${act?`<span class="pill ok">معروض الآن</span>`:`<button class="btn sm" onclick="activateEx('${id}')">تفعيل الآن</button>`}
+        <button class="sw ${on?'on':''}" title="استقبال الإجابات" onclick="toggleEx('${id}')"></button></div>`;
     });
   });
   html+=`</div></div></div>`;
@@ -872,8 +912,10 @@ function applyTab(){const live=document.getElementById("tlive"),ctrl=document.ge
   live.classList.toggle("hidden",T._tab!=="live");ctrl.classList.toggle("hidden",T._tab!=="ctrl");
   tabs.forEach(t=>t.classList.remove("on"));
   if(T._tab==="live")tabs[0].classList.add("on");else if(T._tab==="ctrl")tabs[1].classList.add("on");}
-window.toggleEx=function(id){const cur=T.open[id]!==false;sref().set({open:{[id]:!cur}},{merge:true});}
+window.toggleEx=function(id){const cur=T.open[id]===true;sref().set({open:{[id]:!cur}},{merge:true});}
 window.setAll=function(v){const o={};EX_IDS.forEach(id=>o[id]=v);sref().set({open:o},{merge:true});}
+window.activateEx=function(id){sref().set({active:id,open:{[id]:true}},{merge:true});}
+window.clearActive=function(){sref().set({active:null},{merge:true});}
 window.exportCSV=function(kind){
   const stamp=new Date().toLocaleString("ar-SA",{timeZone:"Asia/Riyadh"});
   const day=new Date().toISOString().slice(0,10);
@@ -910,29 +952,38 @@ function renderProjector(){
       <h2 style="color:var(--brand-d);font-size:18px">امسح الرمز وابدأ التمرين</h2>
       <button class="btn ghost sm" onclick="location.hash='trainer'">↩ اللوحة</button>
     </div>
-    <p class="note">يفتح كل متدرّب التمرين من جواله مباشرةً بمسح الرمز.</p>
+    <p class="note">يتحدّث هذا العرض تلقائياً عند تفعيل تمرين من لوحة التحكّم.</p>
   </div>
   <div class="card" style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
-    <div class="qrc" style="width:190px;flex:none"><div class="box" id="qr_home"></div><b>التسجيل والدخول</b><span>الاسم والمجموعة</span></div>
+    <div class="qrc" style="width:200px;flex:none"><div class="box" id="qr_home"></div><b>التسجيل والدخول</b><span>الاسم والمجموعة</span></div>
     <div style="flex:1;min-width:200px">
       <h3 style="color:var(--brand-d);font-size:17px">ابدأ من هنا</h3>
-      <p class="lead" style="margin-top:6px">امسح الرمز، اكتب اسمك ومجموعتك مرة واحدة، ثم اختر تمرين اليوم. تظهر نتيجتك للمدرّب لحظة التسليم.</p>
+      <p class="lead" style="margin-top:6px">امسح الرمز واكتب اسمك ومجموعتك مرة واحدة. يظهر لك التمرين المفعَّل تلقائياً، وتصل نتيجتك للمدرّب لحظة التسليم.</p>
     </div>
   </div>`;
-  DAYS.forEach(d=>{
-    html+=`<div class="card"><h3 style="color:var(--brand-d);font-size:16px;margin-bottom:4px">${d.ic} ${d.t}</h3>
-      <div class="qrgrid">`;
-    EX_IDS.filter(x=>EX[x].day===d.id).forEach(id=>{
-      html+=`<div class="qrc"><div class="box" id="qr_${id}"></div><b>${EX[id].t}</b><span>${d.t}</span></div>`;
-    });
-    html+=`</div></div>`;
-  });
+  if(ACTIVE){
+    const e=EX[ACTIVE], d=DAYS.find(x=>x.id===e.day);
+    html+=`<div class="card" id="projActive" style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;border:2px solid var(--ok)">
+      <div class="qrc" style="width:240px;flex:none"><div class="box" id="qr_active"></div><b>${e.t}</b><span>${d.t}</span></div>
+      <div style="flex:1;min-width:200px">
+        <span class="pill ok">التمرين المفعَّل الآن</span>
+        <h2 style="color:var(--brand-d);font-size:24px;margin-top:10px">${e.ic} ${e.t}</h2>
+        <p class="lead" style="margin-top:6px">${e.s}</p>
+      </div>
+    </div>`;
+  }else{
+    html+=`<div class="card center" id="projNone"><div class="banner warn">لا يوجد تمرين مفعّل. فعّل تمريناً من تبويب «التحكّم» ليظهر رمزه هنا.</div></div>`;
+  }
   App.innerHTML=html;
   const base=location.origin+location.pathname;
-  const hq=document.getElementById("qr_home");
-  if(hq&&window.QRCode)new QRCode(hq,{text:base,width:170,height:170,colorDark:"#2f5f52",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});
-  EX_IDS.forEach(id=>{const el=document.getElementById("qr_"+id);if(el&&window.QRCode){
-    new QRCode(el,{text:base+"#ex="+id,width:160,height:160,colorDark:"#2f5f52",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});}});
+  const mk=(el,text,size)=>{if(el&&window.QRCode)new QRCode(el,{text,width:size,height:size,colorDark:"#2f5f52",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});};
+  mk(document.getElementById("qr_home"),base,180);
+  if(ACTIVE) mk(document.getElementById("qr_active"),base+"#ex="+ACTIVE,220);
+  // اشترك في الجلسة إن لم يكن الاشتراك قائماً (مثلاً عند القدوم من لوحة المدرّب)
+  if(fb.mode==="live" && !fb._watch){
+    if(fb.auth.currentUser) watchSession();
+    else fb.auth.signInAnonymously().catch(e=>console.warn(e.message));
+  }
 }
 
 boot();
