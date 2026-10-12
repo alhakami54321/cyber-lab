@@ -1,0 +1,941 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مختبر التصدّي السيبراني</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ===== نظام التصميم: تدرّج أخضر مرجي فاتح + بطاقة رملية — خط Tajawal، بلا خلفيات كحلية داكنة ===== */
+:root{
+  --g1:#B2D8BB; --g2:#8FB59D; --g3:#6B988D;
+  --sand:#F7E6D6; --ink:#7A4416; --ink-soft:#9A6a3e;
+  --card:#ffffff; --card2:#F4FBF5; --line:#D8E8DC;
+  --txt:#243b2f; --muted:#5d7568;
+  --ok:#1f8a4c; --ok-bg:#e4f6ea; --bad:#c0392b; --bad-bg:#fbe7e4; --warn:#b7791f; --warn-bg:#fdf3e0;
+  --brand:#3f7d6b; --brand-d:#2f5f52;
+  --shadow:0 10px 30px rgba(43,84,70,.14);
+  --r:18px;
+  --ff:'Tajawal',system-ui,'Segoe UI',Tahoma,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:var(--ff); color:var(--txt);
+  background:linear-gradient(160deg,var(--g1) 0%,var(--g2) 46%,var(--g3) 100%);
+  background-attachment:fixed; min-height:100%;
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:860px; margin:0 auto; padding-block:18px; padding-inline:16px}
+h1,h2,h3{margin:0; text-wrap:balance; font-weight:800}
+button{font-family:var(--ff); cursor:pointer}
+.hidden{display:none!important}
+.center{text-align:center}
+
+/* الهيدر */
+.top{display:flex; align-items:center; gap:12px; color:#fff; margin-bottom:14px}
+.top .logo{width:46px;height:46px;border-radius:13px;background:rgba(255,255,255,.18);
+  display:grid;place-items:center;font-size:24px;backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.35)}
+.top .t1{font-size:19px;font-weight:900;line-height:1.2}
+.top .t2{font-size:12.5px;opacity:.9;font-weight:500}
+
+/* البطاقات */
+.card{background:var(--card); border-radius:var(--r); box-shadow:var(--shadow); padding:22px; border:1px solid rgba(255,255,255,.6)}
+.card+.card{margin-top:14px}
+.lead{color:var(--muted); font-size:14.5px; line-height:1.9; font-weight:500}
+
+/* الحقول */
+label.fld{display:block; font-weight:700; font-size:14px; margin:14px 0 6px; color:var(--brand-d)}
+input.in, select.in{width:100%; padding:14px 15px; border:2px solid var(--line); border-radius:13px;
+  font-family:var(--ff); font-size:16px; background:#fff; color:var(--txt); transition:border-color .15s}
+input.in:focus, select.in:focus{outline:none; border-color:var(--g3)}
+
+/* الأزرار */
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%;
+  background:var(--brand); color:#fff; border:none; border-radius:14px; padding:15px 18px;
+  font-size:16.5px; font-weight:800; transition:transform .08s, background .15s; box-shadow:0 6px 16px rgba(47,95,82,.3)}
+.btn:hover{background:var(--brand-d)} .btn:active{transform:translateY(1px)}
+.btn.sand{background:var(--sand); color:var(--ink); box-shadow:0 6px 16px rgba(122,68,22,.18)}
+.btn.sand:hover{filter:brightness(.97)}
+.btn.ghost{background:#fff; color:var(--brand-d); border:2px solid var(--line); box-shadow:none}
+.btn.sm{width:auto; padding:10px 16px; font-size:14px; border-radius:11px}
+.btn[disabled]{opacity:.5; cursor:not-allowed}
+.btnrow{display:flex; gap:10px; margin-top:16px; flex-wrap:wrap}
+.btnrow .btn{flex:1; min-width:140px}
+
+/* شارات */
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;font-size:12.5px;font-weight:700}
+.pill.day{background:var(--sand);color:var(--ink)}
+.pill.ok{background:var(--ok-bg);color:var(--ok)} .pill.bad{background:var(--bad-bg);color:var(--bad)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.live{background:#eaf7ef;color:var(--ok)} .pill.live::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(31,138,76,.5);animation:pulse 1.6s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(31,138,76,.5)}70%{box-shadow:0 0 0 7px rgba(31,138,76,0)}100%{box-shadow:0 0 0 0 rgba(31,138,76,0)}}
+
+/* شبكة التمارين */
+.exgrid{display:grid; grid-template-columns:1fr; gap:12px}
+.ex{display:flex; align-items:center; gap:14px; padding:16px; border:2px solid var(--line); border-radius:15px; background:var(--card2); transition:border-color .15s, transform .08s; text-align:right; width:100%}
+.ex:hover{border-color:var(--g3)} .ex:active{transform:translateY(1px)}
+.ex .ic{width:48px;height:48px;border-radius:13px;background:#fff;display:grid;place-items:center;font-size:24px;flex:none;border:1px solid var(--line)}
+.ex .mt{flex:1; min-width:0}
+.ex .mt b{display:block;font-size:16px;color:var(--brand-d)}
+.ex .mt span{display:block;font-size:12.8px;color:var(--muted);margin-top:3px}
+.ex .st{flex:none;font-size:12px;font-weight:800}
+
+/* عناصر التمرين */
+.qcard{border:1px solid var(--line); border-radius:15px; padding:0; margin-top:16px; overflow:hidden; background:#fff}
+.qhead{padding:14px 16px; background:var(--card2); border-bottom:1px solid var(--line); font-weight:700; font-size:15px; display:flex; gap:10px; align-items:center}
+.qhead .n{width:26px;height:26px;border-radius:8px;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:13px;flex:none}
+.qbody{padding:16px}
+.prompt{font-size:14.8px; line-height:1.95}
+.mono{font-family:ui-monospace,'Cascadia Code',Consolas,monospace; direction:ltr; text-align:left;
+  background:#0f1b17; color:#d7efd9; border-radius:11px; padding:13px 14px; font-size:12.8px; line-height:1.7; overflow-x:auto; white-space:pre}
+.email{border:1px solid var(--line); border-radius:11px; overflow:hidden; margin:4px 0 8px}
+.email .er{display:flex; gap:8px; padding:8px 12px; border-bottom:1px solid var(--line); font-size:13px}
+.email .er:last-child{border-bottom:none}
+.email .k{color:var(--muted); min-width:58px; font-weight:700}
+.email .v{color:var(--txt); word-break:break-word; direction:ltr; text-align:left; flex:1}
+.email .ebody{padding:12px; font-size:13.6px; line-height:1.85; background:#fcfdfc}
+.urlbox{direction:ltr;text-align:left;font-family:ui-monospace,monospace;background:#f4f7f4;border:1px dashed var(--g3);border-radius:10px;padding:11px 13px;font-size:14px;word-break:break-all;margin:6px 0}
+.choices{display:grid; gap:9px; margin-top:12px}
+.choice{display:flex; align-items:flex-start; gap:11px; padding:13px 14px; border:2px solid var(--line); border-radius:13px; background:#fff; transition:all .13s; font-size:14.5px; line-height:1.6}
+.choice:hover{border-color:var(--g3); background:var(--card2)}
+.choice .box{width:22px;height:22px;border:2px solid var(--g3);border-radius:7px;flex:none;display:grid;place-items:center;margin-top:1px;font-size:14px;color:#fff;transition:all .13s}
+.choice.rad .box{border-radius:50%}
+.choice.sel{border-color:var(--brand); background:var(--card2)}
+.choice.sel .box{background:var(--brand); border-color:var(--brand)}
+.choice.correct{border-color:var(--ok); background:var(--ok-bg)} .choice.correct .box{background:var(--ok);border-color:var(--ok)}
+.choice.wrong{border-color:var(--bad); background:var(--bad-bg)} .choice.wrong .box{background:var(--bad);border-color:var(--bad)}
+.choice.locked{pointer-events:none}
+.why{margin-top:9px;font-size:13px;line-height:1.75;padding:10px 12px;border-radius:10px;background:var(--card2);color:var(--muted);border-right:3px solid var(--g3)}
+.why.ok{border-right-color:var(--ok)} .why.bad{border-right-color:var(--bad)}
+
+/* ترتيب */
+.order{display:grid;gap:9px;margin-top:12px}
+.oitem{display:flex;align-items:center;gap:11px;padding:12px 14px;border:2px solid var(--line);border-radius:13px;background:#fff;font-size:14px}
+.oitem .h{display:flex;flex-direction:column;gap:3px}
+.oitem .h button{width:30px;height:24px;border:1px solid var(--line);background:var(--card2);border-radius:7px;font-size:13px;line-height:1;color:var(--brand-d)}
+.oitem .h button:disabled{opacity:.3}
+.oitem .num{width:26px;height:26px;border-radius:8px;background:var(--sand);color:var(--ink);display:grid;place-items:center;font-weight:800;font-size:13px;flex:none}
+.oitem .tx{flex:1;line-height:1.6}
+.oitem.correct{border-color:var(--ok);background:var(--ok-bg)} .oitem.wrong{border-color:var(--bad);background:var(--bad-bg)}
+
+/* شريط التقدّم + النتيجة */
+.pbar{height:9px;background:var(--line);border-radius:999px;overflow:hidden;margin:4px 0 2px}
+.pbar i{display:block;height:100%;background:linear-gradient(90deg,var(--g3),var(--brand));width:0;transition:width .4s}
+.scorebig{font-size:52px;font-weight:900;color:var(--brand-d);line-height:1;font-variant-numeric:tabular-nums}
+.ring{width:132px;height:132px;margin:0 auto}
+
+/* لوحة المدرّب */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:4px 0 2px}
+.kpi{background:var(--card2);border:1px solid var(--line);border-radius:13px;padding:12px;text-align:center}
+.kpi b{display:block;font-size:26px;color:var(--brand-d);font-variant-numeric:tabular-nums;line-height:1}
+.kpi span{font-size:11.5px;color:var(--muted);font-weight:600}
+.lb{display:flex;align-items:center;gap:12px;padding:11px 12px;border-bottom:1px solid var(--line)}
+.lb:last-child{border-bottom:none}
+.lb .rk{width:30px;height:30px;border-radius:9px;background:var(--card2);display:grid;place-items:center;font-weight:800;color:var(--brand-d);flex:none}
+.lb.top1 .rk{background:#f6d879;color:#6b5312} .lb.top2 .rk{background:#dfe4e6;color:#4a5558} .lb.top3 .rk{background:#eccba0;color:#6b4a22}
+.lb .nm{flex:1;min-width:0} .lb .nm b{font-size:14.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb .nm span{font-size:11.5px;color:var(--muted)}
+.lb .sc{font-weight:800;color:var(--brand-d);font-variant-numeric:tabular-nums}
+.exctl{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:#fff;flex-wrap:wrap}
+.exctl .nm{flex:1;min-width:120px;font-size:13.5px;font-weight:700;color:var(--brand-d)}
+.exctl .st{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.sw{position:relative;width:46px;height:26px;border-radius:999px;background:#cfd8d3;border:none;transition:background .15s;flex:none}
+.sw::after{content:"";position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:all .15s}
+.sw.on{background:var(--ok)} .sw.on::after{right:23px}
+
+/* QR */
+.qrgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:12px}
+.qrc{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+.qrc .box{background:#fff;display:grid;place-items:center;padding:6px}
+.qrc .box canvas,.qrc .box img{width:100%!important;height:auto!important;max-width:160px;margin:0 auto}
+.qrc b{display:block;font-size:13px;color:var(--brand-d);margin-top:8px}
+.qrc span{display:block;font-size:11px;color:var(--muted)}
+
+.note{font-size:12.5px;color:var(--muted);line-height:1.7;margin-top:10px}
+.foot{text-align:center;color:rgba(255,255,255,.85);font-size:12px;margin-top:18px;font-weight:500}
+.tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.tab{flex:1;min-width:90px;padding:11px;border:2px solid rgba(255,255,255,.4);background:rgba(255,255,255,.15);color:#fff;border-radius:12px;font-weight:800;font-size:14px;backdrop-filter:blur(6px)}
+.tab.on{background:#fff;color:var(--brand-d);border-color:#fff}
+.banner{padding:11px 14px;border-radius:12px;font-size:13.5px;font-weight:600;margin-bottom:12px;line-height:1.6}
+.banner.warn{background:var(--warn-bg);color:var(--warn)} .banner.ok{background:var(--ok-bg);color:var(--ok)} .banner.bad{background:var(--bad-bg);color:var(--bad)}
+@media(max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)} .qrgrid{grid-template-columns:1fr 1fr}}
+@media(max-width:420px){.qrgrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="logo">🛡️</div>
+    <div>
+      <div class="t1">مختبر التصدّي للهجمات السيبرانية</div>
+      <div class="t2">بيئة تدريب تفاعلية — أمانة منطقة عسير</div>
+    </div>
+  </div>
+  <div id="app"></div>
+  <div class="foot">إعداد وتقديم: المهندس خالد بن أحمد شيخ · الجودة أولاً</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+/* ============================================================
+   الإعداد
+============================================================ */
+const CONFIG = {
+  firebase: {
+    apiKey: "AIzaSyAGUtgETEqHAgMAF18Mo_csnX2VbiKpxUw",
+    authDomain: "cyber-training-lab.firebaseapp.com",
+    projectId: "cyber-training-lab",
+    storageBucket: "cyber-training-lab.firebasestorage.app",
+    messagingSenderId: "977011781337",
+    appId: "1:977011781337:web:00f57ce4d8e72b529158c8"
+  },
+  trainerEmail: "alhakamik@gmail.com",
+  session: "aseer-2026"
+};
+
+/* ============================================================
+   محتوى التمارين — 9 تمارين (3 لكل يوم)
+============================================================ */
+const DAYS = [
+  {id:"d1", t:"اليوم الأول", s:"الوعي والتهديد البشري", ic:"🎯"},
+  {id:"d2", t:"اليوم الثاني", s:"الثغرات والتحليل والدفاع", ic:"🧪"},
+  {id:"d3", t:"اليوم الثالث", s:"الاستجابة والحوكمة", ic:"🚨"}
+];
+
+const EX = {
+/* ---------- اليوم 1 ---------- */
+d1e1:{day:"d1", ic:"🎣", t:"كاشف رسائل التصيّد", s:"٥ رسائل — صنّفها وحدّد مؤشرات الخطر", kind:"mcq",
+  items:[
+    {q:`<div class="email"><div class="er"><span class="k">من</span><span class="v">it-support@amanah-aseer.secure-login.net</span></div><div class="er"><span class="k">الموضوع</span><span class="v">تحديث إلزامي لكلمة المرور خلال ساعة</span></div><div class="ebody">عزيزي الموظف، رُصد دخول غير معتاد على حسابك. اضغط الرابط خلال ٦٠ دقيقة لتأكيد كلمة المرور وإلا يُعلّق حسابك فوراً: http://amanah-aseer.secure-login.net/verify</div></div><b>هذه الرسالة:</b>`,
+     type:"single", pts:14,
+     choices:[{t:"تصيّد — أبلّغ عنها ولا أنقر",correct:true,why:"النطاق الحقيقي لا يُلحق به secure-login.net، والاستعجال والتهديد بالتعليق مؤشرات تصيّد كلاسيكية، والرابط http غير مشفّر."},
+              {t:"رسالة شرعية من الدعم الفني",why:"الدعم الرسمي لا يطلب كلمة المرور عبر رابط ولا يفرض مهلة ٦٠ دقيقة."}]},
+    {q:`والآن حدّد <b>كل</b> مؤشرات الخطر في الرسالة أعلاه:`, type:"multi", pts:16,
+     choices:[{t:"نطاق مرسل مزيّف (secure-login.net مُلحق بالاسم)",correct:true},
+              {t:"استعجال وتهديد بتعليق الحساب",correct:true},
+              {t:"رابط http غير مشفّر",correct:true},
+              {t:"وجود كلمة «عزيزي الموظف» فقط دون اسم صريح",correct:true},
+              {t:"الرسالة تحتوي شعار الأمانة",why:"وجود شعار ليس دليل أمان؛ الشعارات تُنسخ بسهولة."}]},
+    {q:`<div class="email"><div class="er"><span class="k">من</span><span class="v">no-reply@nca.gov.sa</span></div><div class="er"><span class="k">الموضوع</span><span class="v">النشرة الشهرية للتوعية السيبرانية</span></div><div class="ebody">تجدون في النشرة أبرز التهديدات هذا الشهر وإرشادات الحماية. لا تتطلب هذه الرسالة أي إجراء منكم.</div></div><b>هذه الرسالة:</b>`,
+     type:"single", pts:14,
+     choices:[{t:"شرعية على الأرجح — لا تطلب إجراءً ولا بيانات",correct:true,why:"النطاق رسمي (gov.sa)، ولا استعجال ولا طلب بيانات أو نقر. تبقى اليقظة واجبة لكن المؤشرات سليمة."},
+              {t:"تصيّد مؤكد",why:"لا يوجد طلب بيانات ولا رابط مريب ولا استعجال؛ النطاق حكومي."}]},
+    {q:`<div class="email"><div class="er"><span class="k">من</span><span class="v">مدير الإدارة المالية</span></div><div class="er"><span class="k">البريد</span><span class="v">ceo.finance@gmail.com</span></div><div class="er"><span class="k">الموضوع</span><span class="v">تحويل عاجل وسرّي</span></div><div class="ebody">أنا في اجتماع ولا أستطيع الاتصال. حوّل ١٢٠٬٠٠٠ ريال للمورد المرفق حسابه الآن، وأبقِ الأمر بيننا حتى أعود.</div></div><b>هذه الرسالة:</b>`,
+     type:"single", pts:14,
+     choices:[{t:"احتيال انتحال مدير (BEC) — أتحقّق عبر قناة رسمية مستقلة",correct:true,why:"انتحال المسؤول عبر بريد عام (gmail)، مع سرّية واستعجال وتجاوز الإجراء المالي = احتيال تحويلات كلاسيكي."},
+              {t:"أنفّذ فوراً لأن الطلب من المدير",why:"أمر مالي عبر بريد عام مع سرّية واستعجال لا يُنفَّذ أبداً دون تحقّق مستقل."}]},
+    {q:`حدّد <b>كل</b> ما يجعل الرسالة السابقة احتيالاً:`, type:"multi", pts:14,
+     choices:[{t:"بريد عام (gmail) ينتحل مسؤولاً",correct:true},
+              {t:"طلب سرّية وتجاوز الإجراءات",correct:true},
+              {t:"استعجال يمنع التحقّق",correct:true},
+              {t:"مبلغ مالي كبير",correct:true},
+              {t:"توقيع المدير باسمه",why:"الاسم يُكتب بسهولة وليس دليل صحة."}]},
+  ]},
+
+d1e2:{day:"d1", ic:"🔗", t:"فحص الروابط المنتحِلة", s:"هل الرابط آمن؟ وما الحيلة المستخدمة؟", kind:"mcq",
+  items:[
+    {q:`افحص هذا الرابط:<div class="urlbox">https://www.paypa1.com/account/verify</div><b>الحكم:</b>`, type:"single", pts:12,
+     choices:[{t:"مشبوه — تبديل حرف (paypa1 بدل paypal)",correct:true,why:"خداع بصري: الرقم 1 مكان الحرف l. تقنية Typosquatting."},
+              {t:"آمن لأنه https",why:"القفل (https) يعني تشفير النقل فقط، لا يعني أن الموقع شرعي؛ مواقع التصيّد تستخدم https أيضاً."}]},
+    {q:`افحص هذا الرابط:<div class="urlbox">https://amanah-aseer.gov.sa.login-portal.ru/</div><b>أين الخطر؟</b>`, type:"single", pts:14,
+     choices:[{t:"النطاق الحقيقي هو login-portal.ru وليس gov.sa",correct:true,why:"النطاق الفعلي هو آخر جزأين قبل الشرطة المائلة: login-portal.ru. كل ما قبله (gov.sa) مجرد نطاق فرعي خادع."},
+              {t:"لا خطر، يبدأ بـ amanah-aseer.gov.sa",why:"gov.sa هنا نطاق فرعي مزروع داخل نطاق روسي (.ru)؛ الجهة الحقيقية هي المالكة للنطاق الأساسي."}]},
+    {q:`افحص هذا الرابط:<div class="urlbox">https://absher.sa/</div><b>الحكم:</b>`, type:"single", pts:10,
+     choices:[{t:"يبدو شرعياً — نطاق سعودي قصير ومباشر",correct:true,why:"لا تبديل حروف ولا نطاق فرعي خادع. تبقى القاعدة: اكتب العنوان بنفسك ولا تنقر من رسالة."},
+              {t:"مشبوه حتماً",why:"لا يوجد في هذا الرابط أي مؤشر خداع بنيوي."}]},
+    {q:`رابط وصلك في رسالة SMS:<div class="urlbox">https://bit.ly/x9Kq2</div><b>لماذا نحذر منه؟</b>`, type:"multi", pts:14,
+     choices:[{t:"رابط مختصر يُخفي الوجهة الحقيقية",correct:true},
+              {t:"وصل عبر SMS (Smishing) دون سياق",correct:true},
+              {t:"لا يمكن معرفة الموقع قبل فتحه",correct:true},
+              {t:"الروابط المختصرة دائماً فيروسات",why:"ليست دائماً خبيثة، لكنها تُخفي الوجهة فتستوجب الحذر والفحص."}]},
+    {q:`ما أسلم طريقة للتعامل مع رابط مشبوه؟`, type:"single", pts:10,
+     choices:[{t:"نسخه وفحصه على VirusTotal دون نقر، أو كتابة عنوان الجهة يدوياً",correct:true,why:"الفحص قبل النقر أو الدخول المباشر بكتابة العنوان يُبطل الخداع."},
+              {t:"النقر لرؤية الصفحة والحكم عليها",why:"النقر وحده قد يكفي لتشغيل استغلال أو تأكيد بريدك للمهاجم."}]},
+  ]},
+
+d1e3:{day:"d1", ic:"🗂️", t:"تصنيف الأصول والبيانات", s:"طابق كل بند بمستوى التصنيف الصحيح", kind:"mcq",
+  items:[
+    {q:`أرقام هوية المستفيدين وبياناتهم الشخصية تُصنَّف:`, type:"single", pts:12,
+     choices:[{t:"سرّي (Confidential)",correct:true,why:"البيانات الشخصية للمستفيدين حساسة، يسبّب تسريبها ضرراً مباشراً — سرّية وفق التصنيف الوطني."},
+              {t:"عام (Public)"},{t:"داخلي (Internal)"}]},
+    {q:`الإعلانات والخدمات المنشورة على بوابة الأمانة للجمهور:`, type:"single", pts:10,
+     choices:[{t:"عام (Public)",correct:true,why:"معدّة أصلاً للنشر العام، لا ضرر من اطّلاع الجمهور عليها."},
+              {t:"سرّي للغاية"},{t:"داخلي"}]},
+    {q:`مذكّرات التعاميم وجداول الدوام الداخلية:`, type:"single", pts:10,
+     choices:[{t:"داخلي / مقيّد (Internal)",correct:true,why:"للتداول داخل المنشأة فقط، لا للنشر العام ولا تصل خطورتها لمستوى السرّي."},
+              {t:"عام"},{t:"سرّي للغاية"}]},
+    {q:`أي العناصر التالية يُعدّ «أصلاً معلوماتياً» يحتاج حماية؟ (اختر كل ما ينطبق)`, type:"multi", pts:16,
+     choices:[{t:"الخوادم وأجهزة الموظفين",correct:true},{t:"قواعد البيانات والملفات",correct:true},
+              {t:"الخدمات الإلكترونية للمنشأة",correct:true},{t:"كوادر الموظفين ومعرفتهم",correct:true},
+              {t:"أثاث المكاتب العادي",why:"ليس أصلاً معلوماتياً يتطلب حماية سيبرانية."}]},
+    {q:`عند إرسال ملف سرّي بالبريد، الإجراء الصحيح:`, type:"single", pts:12,
+     choices:[{t:"تشفيره ووسمه بمستوى التصنيف وإرساله عبر قناة معتمدة",correct:true,why:"الحماية تلازم البيان: وسم + تشفير + قناة معتمدة."},
+              {t:"رفعه على خدمة مشاركة مجانية وإرسال الرابط",why:"الخدمات المجانية غير المعتمدة خرق مباشر للتصنيف."}]},
+  ]},
+
+/* ---------- اليوم 2 ---------- */
+d2e1:{day:"d2", ic:"📊", t:"تحليل سجلّ SIEM", s:"اقرأ السجلّ واكشف الهجوم", kind:"mcq",
+  items:[
+    {q:`سجلّ دخول مجمّع في الـSIEM خلال ٤ دقائق:
+<div class="mono">10:02:11  LOGIN FAIL  user=admin    src=45.* .* .66
+10:02:12  LOGIN FAIL  user=khaled   src=45.*.*.66
+10:02:13  LOGIN FAIL  user=sara     src=45.*.*.66
+10:02:14  LOGIN FAIL  user=mohammed src=45.*.*.66
+10:02:15  LOGIN FAIL  user=finance  src=45.*.*.66
+10:05:40  LOGIN OK    user=finance  src=45.*.*.66</div>
+<b>ما نوع الهجوم؟</b>`, type:"single", pts:16,
+     choices:[{t:"رشّ كلمات مرور (Password Spraying) من مصدر واحد على عدّة حسابات",correct:true,why:"IP واحد يجرّب كلمة/محاولات على حسابات مختلفة بتتابع سريع — نمط رشّ كلمات المرور، وانتهى بنجاح على حساب finance."},
+              {t:"هجوم حجب خدمة (DDoS)",why:"DDoS يُغرق الخدمة بالطلبات، لا يجرّب تسجيل دخول على حسابات."}]},
+    {q:`ما المصدر (IP) الذي يجب حظره ومتابعته؟`, type:"single", pts:12,
+     choices:[{t:"‎45.*.*.66 — مصدر كل المحاولات",correct:true,why:"كل الأسطر من هذا المصدر؛ حظره يوقف الهجوم ويُحقَّق فيه."},
+              {t:"لا يمكن تحديد المصدر",why:"حقل src يظهر مصدراً واحداً متكرراً."}]},
+    {q:`السطر الأخطر الذي يستدعي استجابة فورية:`, type:"single", pts:14,
+     choices:[{t:"10:05:40 LOGIN OK user=finance — نجاح دخول بعد سلسلة فشل",correct:true,why:"النجاح بعد سلسلة إخفاقات من نفس المصدر = اختراق محتمل لحساب finance؛ يُجمّد فوراً."},
+              {t:"أول سطر فشل على admin",why:"الفشل وحده أقل خطورة من نجاح دخول مشبوه لاحق."}]},
+    {q:`الإجراءات الصحيحة الآن: (اختر كل ما ينطبق)`, type:"multi", pts:16,
+     choices:[{t:"تجميد/إعادة ضبط حساب finance",correct:true},{t:"حظر المصدر 45.*.*.66",correct:true},
+              {t:"تفعيل MFA وفرض كلمات مرور قوية",correct:true},{t:"مراجعة بقية سجلّات هذا المصدر",correct:true},
+              {t:"تجاهل الأمر لأنها محاولات فشل غالباً",why:"هناك نجاح دخول فعلي بعد الفشل؛ التجاهل خطر جسيم."}]},
+  ]},
+
+d2e2:{day:"d2", ic:"🔥", t:"ترتيب قواعد الجدار الناري", s:"رتّب قواعد الميكروتيك بالترتيب الآمن", kind:"order",
+  prompt:`لديك على <b>MikroTik (RouterOS)</b> القواعد التالية في <span class="mono">/ip firewall filter</span>. القواعد تُطبّق من الأعلى للأسفل وأول تطابق يحسم. رتّبها لتحقّق: السماح بالثابت الضروري أولاً، ثم منع ما سواه. اسحب بالأسهم حتى يصحّ الترتيب:`,
+  items:[
+    "accept — established,related (السماح للاتصالات القائمة والمرتبطة)",
+    "accept — الإدارة من شبكة الإدارة الموثوقة فقط (winbox/ssh من LAN-MGMT)",
+    "accept — الخدمات المسموحة للعمل (DNS/HTTP/HTTPS الصادرة)",
+    "drop — الوصول للراوتر نفسه من WAN (input من الإنترنت)",
+    "drop — كل ما تبقّى (المنع الافتراضي Default Deny)"
+  ],
+  why:`القاعدة الذهبية: السماح للمعروف الضروري أولاً (established أولاً للأداء)، ثم حصر الإدارة، ثم خدمات العمل، ثم منع الوصول للراوتر من الإنترنت، وأخيراً المنع الافتراضي الذي يلتقط كل ما لم يُسمح به صراحةً.`},
+
+d2e3:{day:"d2", ic:"🐛", t:"مراجعة ثغرة XSS", s:"اكتشف الثغرة واختر الإصلاح السليم", kind:"mcq",
+  items:[
+    {q:`راجع هذا الكود الذي يعرض تعليق المستخدم:
+<div class="mono">app.get('/comment', (req,res)=>{
+  const c = req.query.text;
+  res.send("&lt;div&gt;" + c + "&lt;/div&gt;");
+});</div>
+<b>ما المشكلة؟</b>`, type:"single", pts:16,
+     choices:[{t:"إدراج مدخل المستخدم في HTML دون تنقية — ثغرة XSS",correct:true,why:"‎req.query.text يُدرج مباشرة في الصفحة، فيمكن حقن <script> يُنفَّذ في متصفّح الضحية."},
+              {t:"لا مشكلة، الكود يعمل بشكل صحيح",why:"يعمل وظيفياً لكنه يفتح ثغرة حقن سكربت خطيرة."}]},
+    {q:`نوع ثغرة XSS هنا (المدخل يُعاد فوراً في الرد):`, type:"single", pts:12,
+     choices:[{t:"منعكسة (Reflected)",correct:true,why:"المدخل يُعكس مباشرة في الاستجابة دون تخزين — Reflected XSS."},
+              {t:"مخزّنة (Stored)",why:"المخزّنة تُحفظ في قاعدة البيانات وتُنفَّذ لكل زائر؛ هنا يُعاد فوراً دون تخزين."}]},
+    {q:`الإصلاح الصحيح: (اختر كل ما يصحّ)`, type:"multi", pts:16,
+     choices:[{t:"ترميز المخرجات (HTML output encoding) للمدخل",correct:true},
+              {t:"التحقّق من المدخلات وتنقيتها (sanitize/validate)",correct:true},
+              {t:"استخدام سياسة CSP لتقييد تنفيذ السكربتات",correct:true},
+              {t:"الاكتفاء بإخفاء الحقل عن المستخدم",why:"الإخفاء لا يمنع إرسال مدخل خبيث عبر الرابط مباشرة."}]},
+    {q:`ضمن تصنيف OWASP، ثغرات الحقن مثل XSS تُعدّ:`, type:"single", pts:10,
+     choices:[{t:"من أخطر وأشهر ثغرات تطبيقات الويب (OWASP Top 10)",correct:true,why:"الحقن وXSS من الفئات الصدارة تاريخياً في OWASP Top 10."},
+              {t:"ثغرة نادرة وقليلة الأثر",why:"من الأكثر شيوعاً وخطورة في تطبيقات الويب."}]},
+  ]},
+
+/* ---------- اليوم 3 ---------- */
+d3e1:{day:"d3", ic:"🔒", t:"محاكاة حادثة فدية", s:"قراراتك المتتالية تحدّد حجم الكارثة", kind:"branch",
+  intro:"الساعة ٨ صباحاً. عدّة أجهزة في جهتك تعرض رسالة تشفير وطلب فدية. الموظفون مذعورون والإدارة تنتظر قرارك. كل قرار يؤثّر في نتيجتك.",
+  steps:[
+    {scene:"١) أول إجراء حين تتأكّد أن جهازاً يُشفّر الملفات الآن:",
+     choices:[
+       {t:"عزل الجهاز عن الشبكة فوراً دون إطفائه",pts:20,fb:"صحيح. العزل يوقف الانتشار، وعدم الإطفاء يحفظ الأدلّة الحيّة في الذاكرة."},
+       {t:"إطفاء الجهاز مباشرة",pts:6,fb:"يوقف الانتشار لكنه يفقد أدلّة الذاكرة المهمة للتحقيق."},
+       {t:"تشغيل مضاد الفيروسات والانتظار",pts:0,fb:"خطأ جسيم: الفدية تواصل التشفير والانتشار أثناء الانتظار."}]},
+    {scene:"٢) انتشر التشفير لمجلّد مشترك على الخادم. ماذا تفعل بالنسخ الاحتياطية؟",
+     choices:[
+       {t:"أفصل/أعزل النسخ الاحتياطية للتأكد أنها غير مصابة",pts:20,fb:"صحيح. حماية النسخ أولوية — النسخة المعزولة هي خط النجاة."},
+       {t:"أبدأ الاستعادة فوراً فوق الأنظمة الحالية",pts:4,fb:"متسرّع: قد تستعيد فوق بيئة ما زالت مصابة فتُفسد النسخة."},
+       {t:"لا شيء، النسخ تحمي نفسها",pts:0,fb:"الفدية الحديثة تستهدف النسخ الاحتياطية أولاً."}]},
+    {scene:"٣) المهاجم يطلب فدية مقابل مفتاح فكّ التشفير. القرار:",
+     choices:[
+       {t:"لا ندفع؛ نبلّغ الجهات المختصة ونستعيد من نسخة نظيفة",pts:20,fb:"صحيح. الدفع لا يضمن الاسترجاع ويموّل الجريمة؛ الإبلاغ والاستعادة هما المسار."},
+       {t:"نتفاوض لخفض المبلغ ثم ندفع",pts:3,fb:"الدفع يبقى خطأ: لا ضمان، ويشجّع على استهدافك مجدداً."},
+       {t:"ندفع فوراً لإنهاء الأزمة",pts:0,fb:"أسوأ خيار: تمويل للجريمة بلا ضمان استرجاع."}]},
+    {scene:"٤) بعد الاحتواء والاستعادة:",
+     choices:[
+       {t:"تحليل جذري للحادثة، سدّ الثغرة، توثيق الدروس، وتدريب",pts:20,fb:"صحيح. إعادة البناء فرصة للتحصين لا مجرد ترميم."},
+       {t:"العودة للعمل مباشرة دون تحليل",pts:3,fb:"الثغرة الأصلية ستُستغل مجدداً."},
+       {t:"الاكتفاء بتغيير كلمات المرور",pts:6,fb:"خطوة جيدة لكنها غير كافية دون تحليل جذري وسدّ الثغرة."}]},
+  ]},
+
+d3e2:{day:"d3", ic:"🔑", t:"استرداد حساب مخترق", s:"رتّب خطوات الاستجابة بالتسلسل الصحيح", kind:"order",
+  prompt:`اكتشف موظف أن حسابه على نظام الجهة أُخترق (رسائل لم يرسلها + تنبيه دخول غريب). رتّب خطوات الاستجابة بالتسلسل الأمثل:`,
+  items:[
+    "تغيير كلمة المرور فوراً من جهاز موثوق",
+    "إنهاء كل الجلسات النشطة وإبطال رموز الدخول",
+    "تفعيل التحقّق متعدّد العوامل (MFA)",
+    "فحص قواعد التحويل والتوقيع والصلاحيات المضافة",
+    "مراجعة سجلّ النشاط وإبلاغ فريق الأمن",
+  ],
+  why:`أوقف وصول المهاجم أولاً (كلمة مرور ثم إنهاء الجلسات)، حصّن بالـMFA، ثم طارد ما زرعه المهاجم (قواعد تحويل/صلاحيات)، وأخيراً راجع السجلّ وبلّغ للتوثيق والتحقيق.`},
+
+d3e3:{day:"d3", ic:"⚖️", t:"مواقف الامتثال (NCA)", s:"طابق كل موقف بالاستجابة الصحيحة", kind:"mcq",
+  items:[
+    {q:`وفق الضوابط الأساسية للأمن السيبراني (ECC) من الهيئة الوطنية (NCA)، مسؤولية الأمن السيبراني في الجهة تقع على:`, type:"single", pts:12,
+     choices:[{t:"رئيس الجهة، ويفوّض الإشراف لجهة مختصّة داخلها",correct:true,why:"ECC تنصّ على أن الالتزام مسؤولية رئيس الجهة؛ وهذا يضمن الدعم والموارد."},
+              {t:"موظف تقنية المعلومات فقط",why:"الحوكمة تبدأ من القيادة العليا لا من فرد تقني."}]},
+    {q:`وصل إشعار بثغرة حرجة (CVE) في نظام تشغّله الجهة وله تصحيح متاح. الإجراء وفق إدارة الثغرات:`, type:"single", pts:14,
+     choices:[{t:"تقييم الخطورة وتطبيق التصحيح ضمن مدة معتمدة بعد اختباره",correct:true,why:"إدارة الثغرات تتطلب ترقيعاً مُداراً ومختبراً ضمن مهلة محددة حسب الخطورة."},
+              {t:"تأجيله لأن النظام يعمل الآن",why:"الثغرة المعروفة غير المصحّحة أشهر أبواب الاختراق."}]},
+    {q:`عند وقوع حادثة سيبرانية مؤثّرة في جهة حكومية، أحد الالتزامات:`, type:"single", pts:12,
+     choices:[{t:"الإبلاغ عن الحادثة للجهات الوطنية المختصة ضمن الإجراءات",correct:true,why:"الإبلاغ المنظّم للجهات الوطنية جزء من الاستجابة والامتثال."},
+              {t:"إخفاء الحادثة لتجنّب الإحراج",why:"الإخفاء مخالفة ويزيد الضرر ويمنع الاستفادة الوطنية من الدرس."}]},
+    {q:`أي الممارسات تدعم مبدأ «أقل الصلاحيات» المطلوب في الضوابط؟ (اختر كل ما ينطبق)`, type:"multi", pts:14,
+     choices:[{t:"منح كل مستخدم أدنى صلاحية تكفي لمهمته",correct:true},
+              {t:"مراجعة دورية للصلاحيات وإلغاء الزائد",correct:true},
+              {t:"فصل المهام الحسّاسة بين أكثر من شخص",correct:true},
+              {t:"منح صلاحيات admin للجميع تسهيلاً للعمل",why:"يناقض المبدأ ويضخّم أثر أي اختراق."}]},
+  ]},
+};
+
+/* ترتيب التمارين لكل يوم */
+const EX_IDS = ["d1e1","d1e2","d1e3","d2e1","d2e2","d2e3","d3e1","d3e2","d3e3"];
+function maxScore(id){const e=EX[id];
+  if(e.kind==="mcq")return e.items.reduce((s,i)=>s+i.pts,0);
+  if(e.kind==="order")return e.items.length*10;
+  if(e.kind==="branch")return e.steps.length*20;
+  return 100;}
+
+/* ============================================================
+   طبقة البيانات (Firebase + احتياطي محلي)
+============================================================ */
+let fb={ready:false, db:null, auth:null, uid:null, mode:"local"};
+const LS = {
+  get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+};
+function initFirebase(){
+  try{
+    if(!CONFIG.firebase.apiKey||typeof firebase==="undefined")return false;
+    firebase.initializeApp(CONFIG.firebase);
+    fb.db=firebase.firestore(); fb.auth=firebase.auth(); fb.mode="live"; fb.ready=true;
+    return true;
+  }catch(e){console.warn("Firebase init failed, local mode:",e.message); fb.mode="local"; return false;}
+}
+function sref(){return fb.db.collection("sessions").doc(CONFIG.session);}
+
+/* ============================================================
+   المسارات
+============================================================ */
+function route(){
+  const h=location.hash.replace(/^#/,"");
+  if(h==="trainer"||h==="t")return {view:"trainer"};
+  if(h==="projector"||h==="p")return {view:"projector"};
+  const m=h.match(/^ex=(d\de\d)$/); if(m&&EX[m[1]])return {view:"solve", ex:m[1]};
+  const d=h.match(/^(d\d)$/); if(d&&DAYS.find(x=>x.id===d[1]))return {view:"home", day:d[1]};
+  return {view:"home"};
+}
+const App=document.getElementById("app");
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+window.addEventListener("hashchange",render);
+let booted=false;
+let OPEN=null;        // خريطة التمارين المفتوحة (null = لم تُقرأ بعد)
+let SESSION_EXISTS=false;
+function boot(){
+  if(booted)return; booted=true;
+  initFirebase();
+  if(fb.mode==="live"){
+    fb.auth.onAuthStateChanged(async u=>{
+      fb.user=u; fb.uid=u?u.uid:null;
+      const v=route().view;
+      if(v==="trainer"){ render(); return; }
+      if(!u){ if(profile()){ try{await fb.auth.signInAnonymously();}catch(e){console.warn(e.message);} } return; }
+      if(!fb._watch){ watchSession(); }
+      if(profile()) ensurePlayer(profile());
+    });
+  }
+  render();
+}
+function watchSession(){
+  fb._watch = sref().onSnapshot(d=>{
+    SESSION_EXISTS=d.exists;
+    OPEN=(d.exists && d.data().open) || {};
+    const r=route();
+    if(r.view==="home") render();
+    else if(r.view==="solve" && S.blocked) render();
+  }, e=>console.warn("session:",e.message));
+}
+
+/* ============================================================
+   واجهة المتدرّب
+============================================================ */
+function profile(){return LS.get("ctl_profile",null)}
+function render(){
+  const r=route();
+  if(r.view==="trainer")return renderTrainer();
+  if(r.view==="projector")return renderProjector();
+  if(r.view==="solve"){
+    if(!profile())return renderRegister(r.ex);
+    return renderSolve(r.ex);
+  }
+  if(!profile())return renderRegister(null);
+  return renderHome(r.day);
+}
+
+function renderRegister(nextEx){
+  App.innerHTML=`
+  <div class="card">
+    <h2 style="color:var(--brand-d);font-size:20px">مرحباً بك في المختبر التفاعلي</h2>
+    <p class="lead" style="margin-top:8px">قبل أن تبدأ، سجّل اسمك ومجموعتك ليظهر تقدّمك لدى المدرّب. تُحفظ بياناتك لهذا الجهاز فلا تُدخلها كل مرة.</p>
+    <label class="fld">الاسم الكامل</label>
+    <input class="in" id="rg_name" placeholder="مثال: خالد أحمد" maxlength="60" autocomplete="name">
+    <label class="fld">المجموعة / الجهة</label>
+    <input class="in" id="rg_org" placeholder="مثال: مجموعة أ — إدارة تقنية المعلومات" maxlength="60" list="orgs">
+    <datalist id="orgs">
+      <option value="المجموعة الأولى"></option><option value="المجموعة الثانية"></option>
+      <option value="المجموعة الثالثة"></option><option value="المجموعة الرابعة"></option>
+    </datalist>
+    <div id="rg_err" class="banner bad hidden" style="margin-top:12px"></div>
+    <button class="btn" id="rg_go" style="margin-top:18px">ابدأ التدريب</button>
+    <p class="note">يصل تقدّمك مباشرةً إلى لوحة المدرّب أثناء الحلّ.</p>
+  </div>`;
+  document.getElementById("rg_go").onclick=async()=>{
+    const name=document.getElementById("rg_name").value.trim();
+    const org=document.getElementById("rg_org").value.trim();
+    const err=document.getElementById("rg_err");
+    if(name.length<2){err.textContent="الرجاء إدخال الاسم (حرفان على الأقل).";err.classList.remove("hidden");return;}
+    if(org.length<2){err.textContent="الرجاء إدخال المجموعة أو الجهة.";err.classList.remove("hidden");return;}
+    const p={name,org,ts:Date.now()}; LS.set("ctl_profile",p);
+    await ensurePlayer(p);
+    location.hash = nextEx ? ("ex="+nextEx) : "";
+    render();
+  };
+}
+
+async function ensurePlayer(p){
+  if(fb.mode!=="live")return;
+  try{
+    if(!fb.uid){ await fb.auth.signInAnonymously(); }
+    const uid=fb.auth.currentUser.uid; fb.uid=uid;
+    const data={name:p.name, org:p.org, lastSeen:Date.now()};
+    const jk="ctl_joined_"+CONFIG.session+"_"+uid;
+    if(!LS.get(jk,false)){ data.joinedAt=Date.now(); }
+    await sref().collection("players").doc(uid).set(data,{merge:true});
+    LS.set(jk,true);
+  }catch(e){console.warn("ensurePlayer:",e.message);}
+}
+
+function myResults(){return LS.get("ctl_results_"+CONFIG.session,{})}
+function setMyResult(ex,obj){const r=myResults();r[ex]=obj;LS.set("ctl_results_"+CONFIG.session,r);}
+
+function renderHome(focusDay){
+  const p=profile(); const res=myResults();
+  let html=`<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <div><h2 style="color:var(--brand-d);font-size:18px">أهلاً ${esc(p.name)}</h2>
+      <div class="note" style="margin-top:2px">${esc(p.org)} ${fb.mode==="live"?'· <span class="pill live">متصل</span>':''}</div></div>
+      <button class="btn ghost sm" onclick="editProfile()">تغيير البيانات</button>
+    </div>
+  </div>`;
+  DAYS.forEach(d=>{
+    const ids=EX_IDS.filter(x=>EX[x].day===d.id);
+    html+=`<div class="card">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <div class="ex" style="width:auto;border:none;background:none;padding:0;pointer-events:none"><div class="ic">${d.ic}</div></div>
+        <div><h3 style="color:var(--brand-d);font-size:17px">${d.t}</h3><div class="note" style="margin-top:0">${d.s}</div></div>
+      </div>
+      <div class="exgrid">`;
+    ids.forEach(id=>{
+      const e=EX[id]; const done=res[id];
+      const st=done?`<span class="pill ok">${done.score}/${done.max}</span>`:`<span class="pill day">ابدأ</span>`;
+      html+=`<button class="ex" onclick="location.hash='ex=${id}'">
+        <div class="ic">${e.ic}</div>
+        <div class="mt"><b>${e.t}</b><span>${e.s}</span></div>
+        <div class="st">${st}</div></button>`;
+    });
+    html+=`</div></div>`;
+  });
+  App.innerHTML=html;
+  if(focusDay){const el=[...document.querySelectorAll('.card h3')].find(h=>h.textContent===DAYS.find(x=>x.id===focusDay).t);if(el)el.scrollIntoView({behavior:"smooth",block:"center"});}
+}
+window.editProfile=function(){LS.set("ctl_profile",null);render();}
+
+/* ---------- حلّ تمرين ---------- */
+let S={}; // حالة التمرين الحالي
+function waitCard(id,msg,sub){
+  const e=EX[id];
+  return `<div class="card center">
+    <div style="font-size:44px">${e?e.ic:"⏳"}</div>
+    <h2 style="color:var(--brand-d);margin-top:6px;font-size:19px">${e?esc(e.t):""}</h2>
+    <div class="banner warn" style="margin-top:14px">${msg}</div>
+    <p class="note">${sub||""}</p>
+    <div class="btnrow"><button class="btn ghost" onclick="location.hash='${e?e.day:""}'">↩ قائمة التمارين</button></div>
+  </div>`;
+}
+function renderSolve(id){
+  const e=EX[id];
+  if(fb.mode==="live"){
+    if(OPEN===null){ S={blocked:true}; App.innerHTML=waitCard(id,"جارٍ الاتصال بالجلسة…","لحظات ويُفتح التمرين."); return; }
+    if(!SESSION_EXISTS){ S={blocked:true}; App.innerHTML=waitCard(id,"لم يبدأ المدرّب الجلسة بعد.","ستُفتح الصفحة تلقائياً فور بدء الجلسة."); return; }
+    if(OPEN[id]!==true){ S={blocked:true}; App.innerHTML=waitCard(id,"هذا التمرين مغلق حالياً.","سيُفتح تلقائياً عندما يتيحه المدرّب — أبقِ الصفحة مفتوحة."); return; }
+  }
+  S={id,ex:e,answers:{},submitted:false,start:Date.now()};
+  S.repeat=!!myResults()[id];
+  if(e.kind==="mcq")return renderMCQ();
+  if(e.kind==="order")return renderOrder();
+  if(e.kind==="branch")return renderBranch();
+}
+function solveHeader(e){
+  return `<div class="card">
+    <button class="btn ghost sm" onclick="location.hash='${e.day}'" style="margin-bottom:12px">↩ رجوع</button>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="ic" style="width:48px;height:48px;border-radius:13px;background:var(--card2);display:grid;place-items:center;font-size:26px;border:1px solid var(--line)">${e.ic}</div>
+      <div><span class="pill day">${DAYS.find(d=>d.id===e.day).t}</span>
+      <h2 style="color:var(--brand-d);font-size:19px;margin-top:6px">${e.t}</h2></div>
+    </div>
+    <p class="lead" style="margin-top:10px">${e.s}</p>
+    ${S.repeat?`<div class="banner warn" style="margin-top:8px">سبق أن سلّمت هذا التمرين. هذه المحاولة للتدريب فقط ولا تغيّر درجتك المسجّلة.</div>`:""}
+  </div>`;
+}
+
+/* MCQ */
+function renderMCQ(){
+  const e=S.ex; let html=solveHeader(e)+`<div class="card" id="qwrap">`;
+  e.items.forEach((it,qi)=>{
+    html+=`<div class="qcard"><div class="qhead"><div class="n">${qi+1}</div>
+      <div>${it.type==="multi"?"اختر كل ما ينطبق":"اختر إجابة واحدة"}</div></div>
+      <div class="qbody"><div class="prompt">${it.q}</div><div class="choices" data-q="${qi}">`;
+    it.choices.forEach((c,ci)=>{
+      html+=`<div class="choice ${it.type==="single"?"rad":""}" data-q="${qi}" data-c="${ci}" onclick="pick(${qi},${ci})">
+        <div class="box"></div><div>${esc(c.t)}</div></div>`;
+    });
+    html+=`</div></div></div>`;
+  });
+  html+=`<div id="mcq_err" class="banner warn hidden" style="margin-top:14px"></div>
+    <button class="btn" id="submitBtn" onclick="submitMCQ()" style="margin-top:16px">سلّم الإجابات</button>
+    <div id="result"></div></div>`;
+  App.innerHTML=html; window.scrollTo(0,0);
+}
+window.pick=function(qi,ci){
+  if(S.submitted)return; const it=S.ex.items[qi];
+  if(it.type==="single"){S.answers[qi]=[ci];}
+  else{const a=S.answers[qi]||[];const i=a.indexOf(ci);if(i>=0)a.splice(i,1);else a.push(ci);S.answers[qi]=a;}
+  document.querySelectorAll(`.choice[data-q="${qi}"]`).forEach(el=>{
+    const c=+el.dataset.c; const on=(S.answers[qi]||[]).includes(c);
+    el.classList.toggle("sel",on); el.querySelector(".box").textContent=on?"✓":"";
+  });
+};
+window.submitMCQ=function(){
+  const e=S.ex;
+  for(let qi=0;qi<e.items.length;qi++){if(!(S.answers[qi]&&S.answers[qi].length)){
+    const err=document.getElementById("mcq_err");err.textContent="الرجاء الإجابة على كل الأسئلة قبل التسليم (السؤال "+(qi+1)+" غير مُجاب).";err.classList.remove("hidden");
+    document.querySelector(`.choices[data-q="${qi}"]`).scrollIntoView({behavior:"smooth",block:"center"});return;}}
+  S.submitted=true; let score=0;
+  e.items.forEach((it,qi)=>{
+    const sel=S.answers[qi]||[]; const correctIdx=it.choices.map((c,i)=>c.correct?i:-1).filter(i=>i>=0);
+    const ok = sel.length===correctIdx.length && sel.every(i=>correctIdx.includes(i));
+    if(ok)score+=it.pts;
+    document.querySelectorAll(`.choice[data-q="${qi}"]`).forEach(el=>{
+      const ci=+el.dataset.c; el.classList.add("locked");
+      const isC=it.choices[ci].correct, isSel=sel.includes(ci);
+      if(isC)el.classList.add("correct"),el.querySelector(".box").textContent="✓";
+      else if(isSel)el.classList.add("wrong"),el.querySelector(".box").textContent="✕";
+    });
+    const body=document.querySelectorAll(".qcard .qbody")[qi];
+    const picked=it.choices[sel[0]];
+    const why=(it.choices.find(c=>c.correct&&c.why)||picked||{}).why;
+    if(why){const d=document.createElement("div");d.className="why "+(ok?"ok":"bad");
+      d.innerHTML=(ok?"✅ إجابة صحيحة. ":"❌ راجع: ")+esc(why);body.appendChild(d);}
+  });
+  finishExercise(score);
+};
+
+/* ترتيب */
+function renderOrder(){
+  const e=S.ex; S.order=shuffle([...Array(e.items.length).keys()]);
+  // تأكد ألا يبدأ مرتباً
+  if(S.order.every((v,i)=>v===i))S.order.reverse();
+  let html=solveHeader(e)+`<div class="card"><p class="prompt">${e.prompt}</p><div class="order" id="orderList"></div>
+    <div class="btnrow"><button class="btn" onclick="submitOrder()">تحقّق من الترتيب</button></div><div id="result"></div></div>`;
+  App.innerHTML=html; drawOrder(); window.scrollTo(0,0);
+}
+function drawOrder(){
+  const e=S.ex; const L=document.getElementById("orderList"); L.innerHTML="";
+  S.order.forEach((orig,pos)=>{
+    const d=document.createElement("div"); d.className="oitem";
+    d.innerHTML=`<div class="num">${pos+1}</div><div class="tx">${esc(e.items[orig])}</div>
+      <div class="h"><button onclick="moveO(${pos},-1)" ${pos===0?"disabled":""}>▲</button>
+      <button onclick="moveO(${pos},1)" ${pos===S.order.length-1?"disabled":""}>▼</button></div>`;
+    L.appendChild(d);
+  });
+}
+window.moveO=function(pos,dir){if(S.submitted)return;const t=pos+dir;if(t<0||t>=S.order.length)return;
+  [S.order[pos],S.order[t]]=[S.order[t],S.order[pos]];drawOrder();};
+window.submitOrder=function(){
+  S.submitted=true; const e=S.ex; let correct=0;
+  const items=document.querySelectorAll("#orderList .oitem");
+  S.order.forEach((orig,pos)=>{const ok=orig===pos;if(ok)correct++;
+    items[pos].classList.add(ok?"correct":"wrong");
+    items[pos].querySelector(".num").textContent=ok?"✓":(pos+1);});
+  const score=correct*10;
+  const r=document.getElementById("result");
+  const d=document.createElement("div");d.className="why "+(correct===e.items.length?"ok":"bad");
+  d.innerHTML=(correct===e.items.length?"✅ ترتيب سليم تماماً. ":`الصحيح ${correct} من ${e.items.length}. `)+esc(e.why);
+  r.appendChild(d);
+  finishExercise(score);
+};
+
+/* تفرّع */
+function renderBranch(){
+  const e=S.ex; S.step=0; S.bscore=0;
+  let html=solveHeader(e)+`<div class="banner warn">${esc(e.intro)}</div><div class="card" id="branchCard"></div>`;
+  App.innerHTML=html; drawStep(); window.scrollTo(0,0);
+}
+function drawStep(){
+  const e=S.ex; const st=e.steps[S.step]; const C=document.getElementById("branchCard");
+  const pct=Math.round(S.step/e.steps.length*100);
+  let html=`<div class="pbar"><i style="width:${pct}%"></i></div>
+    <div class="note">الموقف ${S.step+1} من ${e.steps.length}</div>
+    <div class="qcard"><div class="qhead"><div class="n">${S.step+1}</div><div>قرار</div></div>
+    <div class="qbody"><div class="prompt" style="font-weight:700">${esc(st.scene)}</div><div class="choices">`;
+  st.choices.forEach((c,ci)=>{html+=`<div class="choice" onclick="chooseStep(${ci})"><div class="box"></div><div>${esc(c.t)}</div></div>`;});
+  html+=`</div><div id="stepfb"></div></div></div>`;
+  C.innerHTML=html;
+}
+window.chooseStep=function(ci){
+  const e=S.ex; const st=e.steps[S.step]; const c=st.choices[ci];
+  S.bscore+=c.pts;
+  const choices=document.querySelectorAll("#branchCard .choice");
+  choices.forEach((el,i)=>{el.classList.add("locked");
+    if(i===ci)el.classList.add(c.pts>=16?"correct":(c.pts<=3?"wrong":"sel"));});
+  const best=Math.max(...st.choices.map(x=>x.pts));
+  const fb2=document.getElementById("stepfb");
+  fb2.innerHTML=`<div class="why ${c.pts>=16?"ok":(c.pts<=3?"bad":"")}">${c.pts>=16?"✅ ":"ℹ️ "}${esc(c.fb)} <br><b>+${c.pts} نقطة</b>${c.pts<best?` (الأمثل ${best})`:""}</div>
+    <button class="btn" style="margin-top:12px" onclick="nextStep()">${S.step<e.steps.length-1?"الموقف التالي ←":"عرض النتيجة"}</button>`;
+};
+window.nextStep=function(){S.step++;if(S.step<S.ex.steps.length){drawStep();document.getElementById("branchCard").scrollIntoView({behavior:"smooth",block:"start"});}else{finishExercise(S.bscore);}};
+
+/* ---------- إنهاء وتسجيل النتيجة ---------- */
+function finishExercise(score){
+  const e=S.ex; const max=maxScore(S.id); const ms=Date.now()-S.start;
+  const pct=Math.round(score/max*100);
+  const wasRepeat=S.repeat;
+  if(!wasRepeat) setMyResult(S.id,{score,max,pct,ts:Date.now()});
+  const exId=S.id;
+  setTimeout(async()=>{
+    const st=document.getElementById("saveStatus"); if(!st)return;
+    if(fb.mode!=="live"){st.textContent="وضع تجريبي محلي: النتيجة محفوظة على هذا الجهاز فقط.";return;}
+    if(wasRepeat){st.innerHTML="محاولة تدريبية — درجتك المسجّلة لم تتغيّر.";return;}
+    const res=await saveResult(exId,score,max,ms);
+    if(res.ok){st.innerHTML='<span class="pill ok">✓ وصلت نتيجتك إلى المدرّب</span>';}
+    else if(res.code==="permission-denied"){st.innerHTML='<span class="pill bad">لم تُقبل النتيجة: التمرين مغلق أو سبق تسليمه</span>';}
+    else{st.innerHTML='<span class="pill warn">تعذّر الإرسال — تحقّق من الاتصال</span> <button class="btn ghost sm" id="retrySave">إعادة الإرسال</button>';
+      document.getElementById("retrySave").onclick=async()=>{const r2=await saveResult(exId,score,max,ms);
+        st.innerHTML=r2.ok?'<span class="pill ok">✓ وصلت نتيجتك إلى المدرّب</span>':'<span class="pill bad">ما زال الإرسال متعذّراً</span>';};}
+  },0);
+  const grade = pct>=85?{t:"ممتاز",c:"ok",e:"🏆"}:pct>=60?{t:"جيد",c:"warn",e:"👍"}:{t:"يحتاج مراجعة",c:"bad",e:"📌"};
+  const ring=`<svg class="ring" viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="var(--line)" stroke-width="12"/>
+    <circle cx="60" cy="60" r="52" fill="none" stroke="var(--brand)" stroke-width="12" stroke-linecap="round"
+    stroke-dasharray="${Math.PI*2*52}" stroke-dashoffset="${Math.PI*2*52*(1-pct/100)}" transform="rotate(-90 60 60)"/>
+    <text x="60" y="56" text-anchor="middle" font-size="30" font-weight="900" fill="var(--brand-d)">${pct}%</text>
+    <text x="60" y="78" text-anchor="middle" font-size="12" fill="var(--muted)">${score}/${max}</text></svg>`;
+  const box=document.createElement("div");box.className="card";box.style.marginTop="14px";
+  box.innerHTML=`<div class="center">${ring}
+    <h2 style="color:var(--brand-d);margin-top:6px">${grade.e} ${grade.t}</h2>
+    <p class="note" id="saveStatus">جارٍ إرسال النتيجة…</p></div>
+    <div class="btnrow"><button class="btn ghost" onclick="location.hash='${e.day}'">تمارين ${DAYS.find(d=>d.id===e.day).t}</button>
+    <button class="btn sand" onclick="location.hash=''">كل الأيام</button></div>`;
+  const r=document.getElementById("result"); if(r){r.appendChild(box);box.scrollIntoView({behavior:"smooth",block:"center"});}
+  else App.appendChild(box);
+  const sb=document.getElementById("submitBtn"); if(sb)sb.remove();
+}
+async function saveResult(ex,score,max,ms){
+  if(fb.mode!=="live")return {ok:false,code:"local"};
+  try{
+    if(!fb.auth.currentUser){await fb.auth.signInAnonymously();}
+    fb.uid=fb.auth.currentUser.uid;
+    await ensurePlayer(profile());
+    const uid=fb.uid; const p=profile();
+    await sref().collection("results").doc(uid+"_"+ex).set({
+      uid, ex, name:p.name, score, max, done:true, answered:true,
+      total:score, ms, startedAt:Date.now()-ms, updatedAt:Date.now(), detail:{}
+    });
+    sref().collection("players").doc(uid).set({lastSeen:Date.now()},{merge:true}).catch(()=>{});
+    return {ok:true};
+  }catch(e){console.warn("saveResult:",e.code,e.message);return {ok:false,code:e.code||"error"};}
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+/* ============================================================
+   لوحة المدرّب
+============================================================ */
+let T={players:{},results:{},open:{},unsub:[]};
+function renderTrainer(){
+  if(fb.mode!=="live"){
+    App.innerHTML=`<div class="card"><div class="banner bad">لوحة المدرّب تحتاج اتصال Firebase. تأكّد من فتح الصفحة من الرابط المنشور.</div></div>`;return;}
+  if(!fb.user){
+    App.innerHTML=`<div class="card center">
+      <div style="font-size:46px">👨‍🏫</div>
+      <h2 style="color:var(--brand-d);margin-top:8px">لوحة المدرّب</h2>
+      <p class="lead">سجّل الدخول بحساب Google المعتمد لعرض نتائج المتدربين لحظياً والتحكّم بالتمارين.</p>
+      <button class="btn" id="gIn" style="margin-top:16px">تسجيل الدخول بحساب Google</button>
+      <div id="t_err" class="banner bad hidden" style="margin-top:12px"></div>
+    </div>`;
+    document.getElementById("gIn").onclick=async()=>{
+      try{const prov=new firebase.auth.GoogleAuthProvider();await fb.auth.signInWithPopup(prov);}
+      catch(e){const el=document.getElementById("t_err");el.textContent="تعذّر الدخول: "+e.message;el.classList.remove("hidden");}
+    };return;
+  }
+  if(fb.user.email!==CONFIG.trainerEmail){
+    App.innerHTML=`<div class="card"><div class="banner bad">الحساب ${esc(fb.user.email)} غير معتمد كمدرّب.</div>
+      <button class="btn ghost" onclick="fb.auth.signOut()">تسجيل الخروج</button></div>`;return;}
+  startTrainerFeeds(); drawTrainer();
+}
+function startTrainerFeeds(){
+  if(T.started)return; T.started=true;
+  T.unsub.push(sref().onSnapshot(d=>{T.open=(d.data()&&d.data().open)||{};drawTrainer();}));
+  T.unsub.push(sref().collection("players").onSnapshot(s=>{T.players={};s.forEach(x=>T.players[x.id]=x.data());drawTrainer();}));
+  T.unsub.push(sref().collection("results").onSnapshot(s=>{T.results={};s.forEach(x=>T.results[x.id]=x.data());drawTrainer();}));
+  // أنشئ وثيقة الجلسة إن لم توجد (كل التمارين مفتوحة افتراضياً)
+  sref().get().then(d=>{if(!d.exists){const open={};EX_IDS.forEach(id=>open[id]=true);
+    sref().set({title:"حقيبة التصدّي — عسير",createdAt:Date.now(),open});}});
+}
+function drawTrainer(){
+  if(route().view!=="trainer"||!fb.user||fb.user.email!==CONFIG.trainerEmail)return;
+  const players=Object.entries(T.players);
+  const totals={};
+  Object.values(T.results).forEach(r=>{totals[r.uid]=(totals[r.uid]||0)+(r.score||0);});
+  const lb=players.map(([uid,p])=>({uid,name:p.name,org:p.org,total:totals[uid]||0,
+    done:Object.values(T.results).filter(r=>r.uid===uid&&r.done).length}))
+    .sort((a,b)=>b.total-a.total);
+  const totalMax=EX_IDS.reduce((s,id)=>s+maxScore(id),0);
+  const submissions=Object.keys(T.results).length;
+
+  let html=`<div class="tabs">
+    <button class="tab on" onclick="tSwitch('live')">مباشر</button>
+    <button class="tab" onclick="tSwitch('ctrl')">التحكّم</button>
+    <button class="tab" onclick="location.hash='projector'">عرض QR</button>
+  </div>`;
+
+  html+=`<div id="tlive"><div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <h2 style="color:var(--brand-d);font-size:18px">المتابعة اللحظية <span class="pill live">مباشر</span></h2>
+      <div style="display:flex;gap:8px"><button class="btn ghost sm" onclick="exportCSV('matrix')">كشف الدرجات</button><button class="btn ghost sm" onclick="exportCSV('detail')">سجل مفصّل</button></div>
+    </div>
+    <div class="kpis" style="margin-top:12px">
+      <div class="kpi"><b>${players.length}</b><span>متدرّب</span></div>
+      <div class="kpi"><b>${submissions}</b><span>تسليم</span></div>
+      <div class="kpi"><b>${Object.values(T.open).filter(Boolean).length}</b><span>تمرين مفتوح</span></div>
+      <div class="kpi"><b>${players.length?Math.round(lb.reduce((s,x)=>s+x.total,0)/players.length):0}</b><span>متوسط النقاط</span></div>
+    </div></div>`;
+
+  // لوحة الصدارة
+  html+=`<div class="card"><h3 style="color:var(--brand-d);font-size:16px;margin-bottom:8px">🏆 لوحة الصدارة</h3>`;
+  if(!lb.length)html+=`<p class="note">لا يوجد متدرّبون بعد. اعرض رموز QR ليبدأ الحضور.</p>`;
+  lb.forEach((x,i)=>{html+=`<div class="lb ${i<3?'top'+(i+1):''}">
+    <div class="rk">${i+1}</div>
+    <div class="nm"><b>${esc(x.name)}</b><span>${esc(x.org)} · أنجز ${x.done}/9</span></div>
+    <div class="sc">${x.total}</div></div>`;});
+  html+=`</div>`;
+
+  // أداء كل تمرين
+  html+=`<div class="card"><h3 style="color:var(--brand-d);font-size:16px;margin-bottom:10px">📊 أداء التمارين</h3>`;
+  EX_IDS.forEach(id=>{
+    const rs=Object.values(T.results).filter(r=>r.ex===id&&r.done);
+    const avg=rs.length?Math.round(rs.reduce((s,r)=>s+r.score/r.max*100,0)/rs.length):0;
+    html+=`<div class="exctl"><div class="nm">${EX[id].ic} ${EX[id].t}</div>
+      <div class="st">${rs.length} تسليم · ${avg}%</div>
+      <div style="flex-basis:100%"><div class="pbar"><i style="width:${avg}%"></i></div></div></div>`;
+  });
+  html+=`</div>`;
+  html+=`<div class="card" style="text-align:center"><button class="btn ghost sm" onclick="fb.auth.signOut()">تسجيل الخروج</button></div></div>`;
+
+  // لوحة التحكّم
+  html+=`<div id="tctrl" class="hidden"><div class="card">
+    <h3 style="color:var(--brand-d);font-size:16px;margin-bottom:4px">التحكّم بالتمارين</h3>
+    <p class="note">افتح أو أغلق كل تمرين للمتدربين. المغلق لا يقبل تسليماً.</p>
+    <div class="btnrow"><button class="btn sand sm" onclick="setAll(true)">فتح الكل</button>
+    <button class="btn ghost sm" onclick="setAll(false)">إغلاق الكل</button></div>
+    <div style="margin-top:14px">`;
+  DAYS.forEach(d=>{
+    html+=`<div class="note" style="font-weight:800;color:var(--brand-d);margin:10px 0 6px">${d.t}</div>`;
+    EX_IDS.filter(x=>EX[x].day===d.id).forEach(id=>{
+      const on=T.open[id]!==false;
+      html+=`<div class="exctl"><div class="nm">${EX[id].ic} ${EX[id].t}</div>
+        <button class="sw ${on?'on':''}" onclick="toggleEx('${id}')"></button></div>`;
+    });
+  });
+  html+=`</div></div></div>`;
+  App.innerHTML=html;
+  T._tab=T._tab||"live"; applyTab();
+}
+window.tSwitch=function(t){T._tab=t;applyTab();}
+function applyTab(){const live=document.getElementById("tlive"),ctrl=document.getElementById("tctrl");
+  if(!live||!ctrl)return;const tabs=document.querySelectorAll(".tab");
+  live.classList.toggle("hidden",T._tab!=="live");ctrl.classList.toggle("hidden",T._tab!=="ctrl");
+  tabs.forEach(t=>t.classList.remove("on"));
+  if(T._tab==="live")tabs[0].classList.add("on");else if(T._tab==="ctrl")tabs[1].classList.add("on");}
+window.toggleEx=function(id){const cur=T.open[id]!==false;sref().set({open:{[id]:!cur}},{merge:true});}
+window.setAll=function(v){const o={};EX_IDS.forEach(id=>o[id]=v);sref().set({open:o},{merge:true});}
+window.exportCSV=function(kind){
+  const stamp=new Date().toLocaleString("ar-SA",{timeZone:"Asia/Riyadh"});
+  const day=new Date().toISOString().slice(0,10);
+  let rows;
+  if(kind==="detail"){
+    rows=[["الاسم","المجموعة","اليوم","التمرين","النقاط","من","النسبة","الزمن (ثانية)","وقت التسليم"]];
+    Object.values(T.results).sort((a,b)=>(a.name||"").localeCompare(b.name||"","ar")).forEach(r=>{
+      const e=EX[r.ex]||{}; rows.push([r.name,(T.players[r.uid]||{}).org||"",(DAYS.find(d=>d.id===e.day)||{}).t||"",e.t||r.ex,r.score,r.max,
+        Math.round(r.score/r.max*100)+"%",Math.round((r.ms||0)/1000),
+        r.updatedAt?new Date(r.updatedAt).toLocaleString("ar-SA",{timeZone:"Asia/Riyadh"}):""]);});
+  }else{
+    const totalMax=EX_IDS.reduce((s,id)=>s+maxScore(id),0);
+    rows=[["#","الاسم","المجموعة",...EX_IDS.map(id=>EX[id].t),"المجموع","من "+totalMax,"النسبة","تمارين منجزة"]];
+    const list=Object.entries(T.players).map(([uid,p])=>{
+      const per=EX_IDS.map(id=>{const r=T.results[uid+"_"+id];return r?r.score:"";});
+      const total=per.reduce((s,v)=>s+(v===""?0:v),0);
+      return {p,per,total,done:per.filter(v=>v!=="").length};
+    }).sort((a,b)=>b.total-a.total);
+    list.forEach((x,i)=>rows.push([i+1,x.p.name,x.p.org,...x.per,x.total,totalMax,Math.round(x.total/totalMax*100)+"%",x.done+"/9"]));
+    rows.push([]); rows.push(["الجلسة",CONFIG.session,"تاريخ التصدير",stamp,"عدد المتدربين",list.length]);
+  }
+  const csv="﻿"+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\r\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  a.download=(kind==="detail"?"سجل-مفصل-":"كشف-درجات-")+"مختبر-السيبراني-"+day+".csv";
+  document.body.appendChild(a);a.click();a.remove();
+}
+
+/* ============================================================
+   وضع العرض (QR على البروجكتر)
+============================================================ */
+function renderProjector(){
+  let html=`<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <h2 style="color:var(--brand-d);font-size:18px">امسح الرمز وابدأ التمرين</h2>
+      <button class="btn ghost sm" onclick="location.hash='trainer'">↩ اللوحة</button>
+    </div>
+    <p class="note">يفتح كل متدرّب التمرين من جواله مباشرةً بمسح الرمز.</p>
+  </div>
+  <div class="card" style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+    <div class="qrc" style="width:190px;flex:none"><div class="box" id="qr_home"></div><b>التسجيل والدخول</b><span>الاسم والمجموعة</span></div>
+    <div style="flex:1;min-width:200px">
+      <h3 style="color:var(--brand-d);font-size:17px">ابدأ من هنا</h3>
+      <p class="lead" style="margin-top:6px">امسح الرمز، اكتب اسمك ومجموعتك مرة واحدة، ثم اختر تمرين اليوم. تظهر نتيجتك للمدرّب لحظة التسليم.</p>
+    </div>
+  </div>`;
+  DAYS.forEach(d=>{
+    html+=`<div class="card"><h3 style="color:var(--brand-d);font-size:16px;margin-bottom:4px">${d.ic} ${d.t}</h3>
+      <div class="qrgrid">`;
+    EX_IDS.filter(x=>EX[x].day===d.id).forEach(id=>{
+      html+=`<div class="qrc"><div class="box" id="qr_${id}"></div><b>${EX[id].t}</b><span>${d.t}</span></div>`;
+    });
+    html+=`</div></div>`;
+  });
+  App.innerHTML=html;
+  const base=location.origin+location.pathname;
+  const hq=document.getElementById("qr_home");
+  if(hq&&window.QRCode)new QRCode(hq,{text:base,width:170,height:170,colorDark:"#2f5f52",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});
+  EX_IDS.forEach(id=>{const el=document.getElementById("qr_"+id);if(el&&window.QRCode){
+    new QRCode(el,{text:base+"#ex="+id,width:160,height:160,colorDark:"#2f5f52",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});}});
+}
+
+boot();
+</script>
+</body>
+</html>
