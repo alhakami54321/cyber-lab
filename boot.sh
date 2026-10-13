@@ -14,6 +14,7 @@ AF=/root/.lab_access
 [ -s $AF ] || head -c16 /dev/urandom | base64 | tr -dc 'a-zA-Z0-9' | head -c20 > $AF
 ACCESS=$(cat $AF)
 IP=$(curl -s --max-time 10 https://api.ipify.org || hostname -I | awk '{print $1}')
+DOMAIN=$(echo "$IP" | tr "." "-").sslip.io
 
 # الهدف الوهمي 10.10.10.5
 mkdir -p /opt/lab
@@ -72,11 +73,18 @@ Environment=HOME=/home/$u
 WorkingDirectory=/home/$u
 ExecStart=/usr/bin/ttyd -p 768$i -i lo -b /$ACCESS/t/$u -W -t fontSize=12 -t 'theme={"background":"#0f1b17","foreground":"#aef5c6"}' tmux new-session -A -s lab
 Restart=always
+RestartSec=2
 MemoryMax=300M
 [Install]
 WantedBy=multi-user.target
 U
 done
+
+
+# عزل sshd عن عنوان الهدف ليظهر إصدار الهدف الوهمي لا الحقيقي
+mkdir -p /etc/ssh/sshd_config.d
+printf 'ListenAddress %s\nListenAddress 127.0.0.1\n' "$IP" > /etc/ssh/sshd_config.d/lab-listen.conf
+systemctl restart ssh 2>/dev/null || systemctl restart sshd 2>/dev/null || true
 
 # المنصة
 mkdir -p /var/www/cyberlab
@@ -89,8 +97,9 @@ LOG "lab.html bytes: $(wc -c </var/www/cyberlab/lab.html)"
 # nginx — كل شيء تحت /$ACCESS/ فقط، وما سواه 404
 {
 echo 'server {'
-echo '  listen 80 default_server;'
-echo '  server_name _;'
+echo "  listen ${IP}:80 default_server;"
+echo '  listen 127.0.0.1:80;'
+echo "  server_name $DOMAIN;"
 echo '  location = / { return 404; }'
 for i in 1 2 3 4 5 6; do
 cat <<N
@@ -124,15 +133,28 @@ systemctl enable nginx >/dev/null 2>&1; systemctl restart nginx
 sleep 10
 
 # فحص ذاتي
+
+# ضمان إقلاع كل الطرفيات (g1 فشلت أحياناً عند الإقلاع المتزامن)
+for pass in 1 2; do for i in 1 2 3 4 5 6; do systemctl is-active --quiet lab-term-g$i || { runuser -u g$i -- tmux kill-server 2>/dev/null; systemctl restart lab-term-g$i; }; done; sleep 3; done
+
 LOG "services: $(for s in nginx lab-target lab-fw lab-term-g1 lab-term-g6; do printf '%s=%s ' $s $(systemctl is-active $s); done)"
 LOG "platform: $(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1/$ACCESS/lab.html)"
 LOG "term g1: $(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1/$ACCESS/t/g1/)"
 LOG "deny /: $(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1/)"
 LOG "target scan:"; runuser -u g1 -- nmap -n -sV -p21,22,80,8080 10.10.10.5 2>&1 | grep -E "open|done"
+
+# --- HTTPS عبر certbot + nginx ---
+apt-get install -y -qq certbot python3-certbot-nginx >/dev/null 2>&1
+certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos -m alhakamik@gmail.com --redirect >/tmp/certbot.log 2>&1
+LOG "certbot: $(grep -iE "Congratulations|Successfully|error|failed|unable" /tmp/certbot.log | head -3 | tr '\n' ' ')"
+systemctl reload nginx 2>/dev/null
+LOG "https: $(curl -s -o /dev/null -w '%{http_code}' --max-time 15 https://$DOMAIN/$ACCESS/lab.html)"
+
 LOG "mem: $(free -m | awk '/Mem/{print $3"MB/"$2"MB"}')"
 echo ""
 echo "######################################################"
-echo "#   LAB URL:  http://$IP/$ACCESS/"
+echo "#   LAB URL (HTTPS):  https://$DOMAIN/$ACCESS/"
+echo "#   (http fallback):  http://$IP/$ACCESS/"
 echo "#   ACCESS :  $ACCESS"
 echo "######################################################"
 LOG "=== boot done ==="
